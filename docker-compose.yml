@@ -4,9 +4,9 @@ services:
     container_name: decoy_EM_db
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: decoy_event_managment
+      MYSQL_DATABASE: decoy_event_management
     ports:
-      - "9090:3306"
+      - "3162:3306"
     volumes:
       - decoy_EM_db_data:/var/lib/mysql
     healthcheck:

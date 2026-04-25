@@ -16,4 +16,5 @@ public interface DuyuruRepository extends JpaRepository<Duyuru, Long>
     List<Duyuru> findByDurumGreaterThan(Integer durum);
     List<Duyuru> findByDurumLessThanEqual(Integer durum);
     List<Duyuru> findByDurumGreaterThanEqual(Integer durum);
+    List<Duyuru> findByEtkinlikTarihiIsNull();
 }
