@@ -3,7 +3,6 @@ package com.Decoy.event_managment.Controllers;
 import com.Decoy.event_managment.Models.Duyuru;
 import com.Decoy.event_managment.Models.DuyuruDurumEnum;
 import com.Decoy.event_managment.Repositorys.DuyuruRepository;
-import jakarta.validation.constraints.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,21 +27,7 @@ public class DuyuruController
 
         if (filtre != null)
         {
-            LocalDateTime start;
-            LocalDateTime end;
-
-            switch (filtre) {
-                case 0 -> { start = simdi.toLocalDate().atStartOfDay(); end = start.plusDays(1); duyurular = duyuruRepository.findByEtkinlikTarihiBetween(start, end); }
-                case 1 -> { start = simdi.toLocalDate().plusDays(1).atStartOfDay(); end = start.plusDays(1); duyurular = duyuruRepository.findByEtkinlikTarihiBetween(start, end); }
-                case 2 -> { start = simdi.toLocalDate().atStartOfDay(); end = start.plusWeeks(1); duyurular = duyuruRepository.findByEtkinlikTarihiBetween(start, end); }
-                case 3 -> { start = simdi.toLocalDate().atStartOfDay(); end = start.plusMonths(1); duyurular = duyuruRepository.findByEtkinlikTarihiBetween(start, end); }
-                case 4 -> { start = simdi.toLocalDate().atStartOfDay(); end = start.plusMonths(3); duyurular = duyuruRepository.findByEtkinlikTarihiBetween(start, end); }
-                case 5 -> { start = simdi.toLocalDate().atStartOfDay(); end = start.plusYears(1); duyurular = duyuruRepository.findByEtkinlikTarihiBetween(start, end); }
-                case 6 -> { start = simdi.plusYears(1); end = simdi.plusYears(100); duyurular = duyuruRepository.findByEtkinlikTarihiBetween(start, end); }
-                case 7 -> { start = simdi.minusYears(100); end = simdi; duyurular = duyuruRepository.findByEtkinlikTarihiBetween(start, end); }
-                case 8 -> duyurular = duyuruRepository.findByEtkinlikTarihiIsNull();
-                default -> duyurular = duyuruRepository.findAll();
-            }
+            duyurular = duyuruRepository.findByDurumLessThanEqual(filtre);
         }
         else
         {
@@ -79,8 +64,41 @@ public class DuyuruController
         return info;
     }
 
+    private int calculateDurum(LocalDateTime tarih)
+    {
+        if (tarih == null)
+            return DuyuruDurumEnum.TarihiBelirsiz.value;
+
+        LocalDateTime simdi = LocalDateTime.now();
+
+        if (tarih.isBefore(simdi))
+            return DuyuruDurumEnum.TarihiGecmis.value;
+
+        if (tarih.isBefore(simdi.plusDays(1)))
+            return DuyuruDurumEnum.Bugun.value;
+
+        if (tarih.isBefore(simdi.plusDays(2)))
+            return DuyuruDurumEnum.Yarin.value;
+
+        if (tarih.isBefore(simdi.plusWeeks(1)))
+            return DuyuruDurumEnum.BuHafta.value;
+
+        if (tarih.isBefore(simdi.plusMonths(1)))
+            return DuyuruDurumEnum.BuAy.value;
+
+        if (tarih.isBefore(simdi.plusMonths(3)))
+            return DuyuruDurumEnum.UcAy.value;
+
+        if (tarih.isBefore(simdi.plusYears(1)))
+            return DuyuruDurumEnum.BuYil.value;
+
+        return DuyuruDurumEnum.BirYildanFazla.value;
+    }
+
     @PostMapping("/add")
-    public String add(@ModelAttribute Duyuru duyuru) {
+    public String add(@ModelAttribute Duyuru duyuru)
+    {
+        duyuru.setDurum(calculateDurum(duyuru.getEtkinlikTarihi()));
         duyuruRepository.save(duyuru);
         return "redirect:/";
     }
@@ -88,6 +106,20 @@ public class DuyuruController
     @PostMapping("/delete/{id}")
     public String delete(@PathVariable Long id) {
         duyuruRepository.deleteById(id);
+        return "redirect:/";
+    }
+
+    @PostMapping("/update_dates")
+    public String update_dates()
+    {
+        List<Duyuru> duyurular =
+                duyuruRepository.findByDurumLessThanEqual(DuyuruDurumEnum.BirYildanFazla.value);
+
+        for(Duyuru d : duyurular)
+        {
+            d.setDurum(calculateDurum(d.getEtkinlikTarihi()));
+        }
+        duyuruRepository.saveAll(duyurular);
         return "redirect:/";
     }
 }
