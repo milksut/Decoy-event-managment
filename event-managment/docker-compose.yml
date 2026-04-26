@@ -18,7 +18,7 @@ services:
       - decoy_network
       
   app:
-    build: altay2510tr/event-managment-app:latest
+    image: altay2510tr/event-managment-app:latest
     container_name: decoy_EM_app
     hostname: decoy_EM_app
     ports:
