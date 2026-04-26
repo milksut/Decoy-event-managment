@@ -1,0 +1,41 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: decoy_EM_db
+    hostname: decoy_EM_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: decoy_event_management
+    ports:
+      - "9090:3306"
+    volumes:
+      - decoy_EM_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+    networks:
+      - decoy_network
+      
+  app:
+    build: .
+    container_name: decoy_EM_app
+    hostname: decoy_EM_app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://decoy_EM_db:3306/decoy_event_management
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - decoy_network
+
+volumes:
+  decoy_EM_db_data:
+
+networks:
+  decoy_network:
+    driver: bridge

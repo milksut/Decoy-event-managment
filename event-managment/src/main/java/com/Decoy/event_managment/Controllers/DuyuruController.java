@@ -27,7 +27,15 @@ public class DuyuruController
 
         if (filtre != null)
         {
-            duyurular = duyuruRepository.findByDurumLessThanEqual(filtre);
+            if(filtre == DuyuruDurumEnum.TarihiGecmis.value
+            || filtre == DuyuruDurumEnum.TarihiBelirsiz.value)
+            {
+                duyurular = duyuruRepository.findByDurum(filtre);
+            }
+            else
+            {
+                duyurular = duyuruRepository.findByDurumLessThanEqual(filtre);
+            }
         }
         else
         {
